@@ -1,0 +1,16 @@
+  <form [formGroup]="todoForm" (ngSubmit)="onSubmit()" class="row align-items-end">
+    <div class="col-md-8">
+      <label for="todo-title" class="form-label">Title:</label>
+      <input type="text" class="form-control" id="todo-title" formControlName="title">
+    </div>
+    <div class="col-md-3">
+      <label for="category" class="form-label">Category:</label>
+      <select class="form-select" id="category" formControlName="categoryId">
+        <option *ngFor="let category of categories$ | async" [value]="category.id">{{ category.name }}</option>
+      </select>
+    </div>
+    <div class="col-md-1">
+      <button type="submit" class="btn btn-primary" [disabled]="!todoForm.valid">Add</button>
+    </div>
+  </form>
+

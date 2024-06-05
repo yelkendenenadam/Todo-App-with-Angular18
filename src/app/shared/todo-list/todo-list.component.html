@@ -1,0 +1,27 @@
+<form [formGroup]="todoForm" (ngSubmit)="onSave()">
+  <table class="table table-striped table-hover">
+    <thead>
+    <tr>
+      <th>Title</th>
+      <th>Category</th>
+      <th></th>
+    </tr>
+    </thead>
+    <tbody formArrayName="todos">
+    <tr *ngFor="let todo of todoForm.controls.todos.controls; let i = index" [formGroupName]="i">
+      <td><input class="form-control" formControlName="title" /></td>
+      <td>
+        <select class="form-select" formControlName="categoryId">
+          <option *ngFor="let category of categories$ | async" [value]= "category.id">{{ category.name }}</option>
+        </select>
+      </td>
+      <td class="text-end">
+        <button class="btn btn-danger" (click)="onRemove(i)">Remove</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  <div class="d-flex justify-content-end">
+    <button type="submit" class="btn btn-primary" [disabled]="!changeDetected">Save</button>
+  </div>
+</form>

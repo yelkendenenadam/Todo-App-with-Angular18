@@ -1,0 +1,18 @@
+<div>
+  <table class="table table-striped table-hover">
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let category of categories$ | async;">
+      <td>{{ category.name }}</td>
+      <td class="text-end">
+        <button class="btn btn-danger" (click)="onRemove(category.id)">Remove</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>

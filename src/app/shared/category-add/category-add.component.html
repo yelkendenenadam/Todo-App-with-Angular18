@@ -1,0 +1,15 @@
+<div class="my-3">
+  <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
+    <div class="row align-items-end">
+      <div class="col-2">
+        <label for="category-name" class="form-label">Category name:</label>
+      </div>
+      <div class="col-9">
+        <input type="text" class="form-control" id="category-name" formControlName="name">
+      </div>
+      <div class="col-1">
+        <button type="submit" class="btn btn-primary" [disabled]="!categoryForm.valid">Add</button>
+      </div>
+    </div>
+  </form>
+</div>
