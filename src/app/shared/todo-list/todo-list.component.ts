@@ -20,16 +20,19 @@ import {CategoryItem} from "../../interface/category-item";
 })
 export class TodoListComponent {
   todos$!: Observable<TodoItem[]>;
+  filteredTodos$!: Observable<TodoItem[]>;
   categories$!: Observable<CategoryItem[]>;
   todoForm = new FormGroup({
     todos: new FormArray([])
   });
   changeDetected = false;
+  filteredTodoIds: number[] = [];
 
   constructor(private todoService: TodoService, protected categoryService: CategoryService) {}
 
   ngOnInit() {
-    this.todos$ = this.todoService.getFilteredTodos();
+    this.todos$ = this.todoService.getTodos();
+    this.filteredTodos$ = this.todoService.getFilteredTodos();
     this.categories$ = this.categoryService.getCategories();
 
     this.todos$.subscribe(todos => {
@@ -41,6 +44,10 @@ export class TodoListComponent {
         categoryId: new FormControl(todo.categoryId, Validators.required),
       })));
       this.changeDetected = false;
+    });
+
+    this.filteredTodos$.subscribe(filteredTodos => {
+      this.filteredTodoIds = filteredTodos.map(todo => todo.id);
     });
 
     combineLatest([
@@ -70,6 +77,11 @@ export class TodoListComponent {
       }
     }
     return false;
+  }
+
+  isVisible(index: number) {
+    const todoId = (this.todoForm.value.todos as TodoItem[])[index].id;
+    return this.filteredTodoIds.includes(todoId);
   }
 
   onSave() {
