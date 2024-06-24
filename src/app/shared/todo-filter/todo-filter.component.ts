@@ -1,6 +1,6 @@
 import {Component} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
-import {combineLatest, debounceTime, map, Observable, startWith} from "rxjs";
+import {combineLatest, debounceTime, map, Observable, startWith, Subscription} from "rxjs";
 import {CategoryItem} from "../../interface/category-item";
 import {TodoItem} from "../../interface/todo-item";
 import {CategoryService} from "../../service/category/category.service";
@@ -23,17 +23,16 @@ export class TodoFilterComponent {
     title: new FormControl( ''),
     category: new FormControl( '')
   })
-  categories$!: Observable<CategoryItem[]>;
-  todos$!: Observable<TodoItem[]>
+  categories$!: Observable<Map<number, CategoryItem>>
+  filterSubscription!: Subscription;
 
   constructor(private categoryService: CategoryService, private todoService: TodoService) {  }
 
   ngOnInit(): void {
     this.categories$ = this.categoryService.getCategories();
-    this.todos$ = this.todoService.getTodos()
 
-    combineLatest([
-      this.todos$,
+    this.filterSubscription = combineLatest([
+      this.todoService.getTodos(),
       this.filterForm.get('title')!.valueChanges.pipe(
         startWith(''),
         debounceTime(500)
@@ -44,6 +43,9 @@ export class TodoFilterComponent {
         return this.todoService.filterTodos(title || '', category || '')
       })
     ).subscribe();
+  }
 
+  ngOnDestroy(): void {
+    this.filterSubscription.unsubscribe();
   }
 }

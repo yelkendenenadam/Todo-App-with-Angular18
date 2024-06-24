@@ -7,10 +7,8 @@ import {TodoItem} from "../../interface/todo-item";
   providedIn: 'root'
 })
 export class TodoService {
-  private todosSubject = new BehaviorSubject<TodoItem[]>([])
-  private todos$ = this.todosSubject.asObservable();
-  private filteredTodosSubject = new BehaviorSubject<TodoItem[]>([]);
-  private filteredTodos$ = this.filteredTodosSubject.asObservable();
+  private todosSubject = new BehaviorSubject<Map<number, TodoItem>>(new Map<number, TodoItem>())
+  private filteredTodosSubject = new BehaviorSubject<Map<number, TodoItem>>(new Map<number, TodoItem>())
   private IDNext = 0;
 
   constructor(private storage: StorageService) {
@@ -27,52 +25,55 @@ export class TodoService {
   }
 
   public getTodos(){
-    return this.todos$;
+    return this.todosSubject.asObservable();
   }
 
   public getFilteredTodos(){
-    return this.filteredTodos$;
+    return this.filteredTodosSubject.asObservable();
   }
 
   public addTodo(todo: TodoItem) {
     todo.id = this.IDNext++;
-    this.todosSubject.next([...this.todosSubject.getValue(), todo]);
+    this.todosSubject.next(this.todosSubject.getValue().set(todo.id, todo));
     this.storage.setStorage('todos', this.todosSubject.getValue());
   }
 
   public removeTodo(todoId: number) {
-    this.todosSubject.next( this.todosSubject.getValue().filter(todo => todo.id !== todoId));
-    this.storage.setStorage('todos', this.todosSubject.getValue());
+    let todos = this.todosSubject.getValue();
+    todos.delete(todoId);
+    this.todosSubject.next(todos);
+    this.storage.setStorage('todos', todos);
   }
 
   public filterTodos(title: string, category: string){
-    const filteredTodos = this.todosSubject.getValue().filter(todo => {
-      if (title.trim() === '' && category.trim() === '') {
-        return true;
-      }
+    if (title.trim() === '' && category === '') {
+      this.filteredTodosSubject.next(this.todosSubject.getValue());
+      return;
+    }
 
-      const titleMatch = todo.title.toLowerCase().includes(title.toLowerCase());
-      const categoryMatch = todo.categoryId == +category;
+    title = title.trim().toLowerCase();
 
-      if (title.trim() !== '' && category.trim() === '') {
-        return titleMatch;
+    let filteredTodos = new Map<number, TodoItem>();
+    this.todosSubject.getValue().forEach(todo => {
+      if (title === '' && category !== '' && todo.categoryId == +category){
+        filteredTodos.set(todo.id, todo);
       }
-      if (title.trim() === '' && category.trim() !== '') {
-        return categoryMatch;
+      else if (title !== '' && todo.title.toLowerCase().includes(title) && category === '') {
+        filteredTodos.set(todo.id, todo);
       }
-      return titleMatch && categoryMatch;
+      else if (title !== '' && todo.title.toLowerCase().includes(title) && category !== '' && todo.categoryId == +category) {
+        filteredTodos.set(todo.id, todo);
+      }
     });
     this.filteredTodosSubject.next(filteredTodos);
   }
 
   public updateTodos(todosToUpdate: TodoItem[]) {
-    const todos = this.todosSubject.getValue();
+    let todos = this.todosSubject.getValue();
     todosToUpdate.forEach(todoToUpdate => {
-      const todoIndex = todos.findIndex(todo => todoToUpdate.id === todo.id);
-      todos[todoIndex] = todoToUpdate;
-    })
+      todos.set(todoToUpdate.id, todoToUpdate);
+    });
     this.todosSubject.next(todos);
-    this.storage.setStorage('todos', this.todosSubject.getValue());
+    this.storage.setStorage('todos', todos);
   }
-
 }

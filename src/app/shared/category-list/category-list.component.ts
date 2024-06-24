@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import {CategoryService} from "../../service/category/category.service";
 import {CategoryItem} from "../../interface/category-item";
 import {AsyncPipe, NgFor} from "@angular/common";
-import {Observable} from "rxjs";
+import {Observable, Subscription} from "rxjs";
 
 @Component({
   selector: 'app-category-list',
@@ -15,16 +15,16 @@ import {Observable} from "rxjs";
   styleUrl: './category-list.component.scss'
 })
 export class CategoryListComponent {
-  categories$! : Observable<CategoryItem[]>;
+  categories$! : Observable<Map<number, CategoryItem>>;
 
-  constructor(private categoryService: CategoryService) { }
+  constructor(protected categoryService: CategoryService) { }
 
   ngOnInit(): void {
     this.categories$ = this.categoryService.getCategories();
   }
 
+
   onRemove(id: number): void {
     this.categoryService.removeCategory(id);
   }
-
 }

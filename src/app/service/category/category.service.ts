@@ -8,8 +8,7 @@ import {StorageService} from "../storage/storage.service";
 })
 export class CategoryService {
 
-  private categoriesSubject= new BehaviorSubject<CategoryItem[]>([]);
-  private categories$= this.categoriesSubject.asObservable();
+  private categoriesSubject= new BehaviorSubject<Map<number, CategoryItem>>(new Map<number, CategoryItem>());
   private IDNext = 0;
 
   constructor(private storage: StorageService) {
@@ -20,26 +19,28 @@ export class CategoryService {
     const data = this.storage.getStorage('categories');
     if (data && data.length > 0) {
       this.categoriesSubject.next(data);
-      this.IDNext = data[data.length - 1].id + 1;
     }
+
+    this.IDNext = this.storage.getStorage('categoryIDLast');
+
   }
 
   public getCategories() {
-    return this.categories$;
+    return this.categoriesSubject.asObservable();
   }
 
   public addCategory(category: CategoryItem) {
     category.id = this.IDNext++;
-    this.categoriesSubject.next([...this.categoriesSubject.getValue(), category]);
+    this.categoriesSubject.next(this.categoriesSubject.getValue().set(category.id, category));
     this.storage.setStorage('categories', this.categoriesSubject.getValue());
+    this.storage.setStorage('categoryIDLast', this.IDNext);
   }
 
   public removeCategory(categoryID: number) {
-    this.categoriesSubject.next( this.categoriesSubject.getValue().filter(category => category.id !== categoryID));
-    this.storage.setStorage('categories', this.categoriesSubject.getValue());
+    let categories = this.categoriesSubject.getValue();
+    categories.delete(categoryID);
+    this.categoriesSubject.next(categories);
+    this.storage.setStorage('categories', categories);
   }
 
-  public getCategory(id: number) {
-    return this.categoriesSubject.getValue().find(category => category.id == id);
-  }
 }

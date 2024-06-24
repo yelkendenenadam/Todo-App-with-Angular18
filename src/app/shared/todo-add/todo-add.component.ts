@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
 import {TodoService} from "../../service/todo/todo.service";
 import {CategoryService} from "../../service/category/category.service";
-import {Observable} from "rxjs";
+import {Observable, Subscription} from "rxjs";
 import {CategoryItem} from "../../interface/category-item";
 import {TodoItem} from "../../interface/todo-item";
 import {AsyncPipe, NgFor} from "@angular/common";
@@ -23,7 +23,7 @@ export class TodoAddComponent {
     title: new FormControl('', [Validators.required]),
     categoryId: new FormControl (null,[Validators.required]),
   });
-  categories$!: Observable<CategoryItem[]>;
+  categories$!: Observable<Map<number, CategoryItem>>
 
   constructor(private todoService: TodoService, private categoryService: CategoryService) { }
 

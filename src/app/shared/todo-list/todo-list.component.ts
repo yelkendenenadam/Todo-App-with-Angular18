@@ -1,6 +1,6 @@
 import {Component} from '@angular/core';
 import {TodoItem} from "../../interface/todo-item";
-import {combineLatest, map, Observable, startWith} from "rxjs";
+import {combineLatest, map, Observable, startWith, Subscription} from "rxjs";
 import {FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
 import {TodoService} from "../../service/todo/todo.service";
 import {CategoryService} from "../../service/category/category.service";
@@ -19,23 +19,21 @@ import {CategoryItem} from "../../interface/category-item";
   styleUrl: './todo-list.component.scss'
 })
 export class TodoListComponent {
-  todos$!: Observable<TodoItem[]>;
-  filteredTodos$!: Observable<TodoItem[]>;
-  categories$!: Observable<CategoryItem[]>;
+  todos$!: Map<number, TodoItem>;
+  categories$!: Observable<Map<number, CategoryItem>>
+  todosSubscription!: Subscription;
+  filteredTodos$!: Map<number, TodoItem>;
+  filteredTodosSubscription!: Subscription;
   todoForm = new FormGroup({
     todos: new FormArray([])
   });
-  changeDetected = false;
-  filteredTodoIds: number[] = [];
 
   constructor(private todoService: TodoService, protected categoryService: CategoryService) {}
 
   ngOnInit() {
-    this.todos$ = this.todoService.getTodos();
-    this.filteredTodos$ = this.todoService.getFilteredTodos();
     this.categories$ = this.categoryService.getCategories();
-
-    this.todos$.subscribe(todos => {
+    this.todosSubscription = this.todoService.getTodos().subscribe(todos => {
+      this.todos$ = todos;
       const todoArray = this.todoForm.get('todos') as FormArray;
       todoArray.clear();
       todos.forEach(todo => todoArray.push(new FormGroup({
@@ -43,50 +41,32 @@ export class TodoListComponent {
         title: new FormControl(todo.title, Validators.required),
         categoryId: new FormControl(todo.categoryId, Validators.required),
       })));
-      this.changeDetected = false;
     });
-
-    this.filteredTodos$.subscribe(filteredTodos => {
-      this.filteredTodoIds = filteredTodos.map(todo => todo.id);
+    this.filteredTodosSubscription = this.todoService.getFilteredTodos().subscribe(filteredTodos => {
+      this.filteredTodos$ = filteredTodos;
     });
+  }
 
-    combineLatest([
-      this.todos$,
-      this.todoForm.valueChanges.pipe(
-        startWith(this.todoForm.value)
-      )
-    ]).pipe(
-      map(([todos, formValue]) => {
-        return this.checkForChange(todos, formValue.todos as TodoItem[])
-      })
-    ).subscribe(change => this.changeDetected = change);
-
+  ngOnDestroy() {
+    this.todosSubscription.unsubscribe();
+    this.filteredTodosSubscription.unsubscribe();
   }
 
   onRemove(todoIndex: number) {
     this.todoService.removeTodo((this.todoForm.value.todos as TodoItem[])[todoIndex].id);
   }
 
-  checkForChange(todos: TodoItem[], formArray: TodoItem[]) {
-    if (formArray.length !== todos.length) {
-      return false;
-    }
-    for (let i = 0; i < formArray.length; i++) {
-      if (formArray[i].title !== todos[i].title || formArray[i].categoryId !== todos[i].categoryId) {
-        return true;
-      }
-    }
-    return false;
-  }
 
   isVisible(index: number) {
-    const todoId = (this.todoForm.value.todos as TodoItem[])[index].id;
-    return this.filteredTodoIds.includes(todoId);
+    return this.filteredTodos$.has((this.todoForm.value.todos as TodoItem[])[index].id);
   }
 
   onSave() {
-    this.todoService.updateTodos(this.todoForm.value.todos as TodoItem[])
-    this.changeDetected = false;
+    const formArray = this.todoForm.get('todos') as FormArray;
+    const todosToUpdate = formArray.controls
+      .filter(control => control.dirty)
+      .map(control => control.value);
+    this.todoService.updateTodos(todosToUpdate);
+    this.todoForm.markAsPristine();
   }
-
 }
