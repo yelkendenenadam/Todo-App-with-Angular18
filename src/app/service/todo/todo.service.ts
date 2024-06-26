@@ -58,10 +58,10 @@ export class TodoService {
       if (title === '' && category !== '' && todo.categoryId == +category){
         filteredTodos.set(todo.id, todo);
       }
-      else if (title !== '' && todo.title.toLowerCase().includes(title) && category === '') {
+      else if (title !== '' && category === '' && todo.title.toLowerCase().includes(title)) {
         filteredTodos.set(todo.id, todo);
       }
-      else if (title !== '' && todo.title.toLowerCase().includes(title) && category !== '' && todo.categoryId == +category) {
+      else if (title !== '' && category !== '' && todo.categoryId == +category && todo.title.toLowerCase().includes(title)) {
         filteredTodos.set(todo.id, todo);
       }
     });

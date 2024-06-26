@@ -12,7 +12,7 @@
       <td><input class="form-control" formControlName="title" /></td>
       <td>
         <select class="form-select" formControlName="categoryId">
-          <option *ngFor="let category of categories$ | async" [value]= "category.id">{{ category.name }}</option>
+          <option *ngFor="let category of categories$ | async" [value]= "category[1].id">{{ category[1].name }}</option>
         </select>
       </td>
       <td class="text-end">

@@ -8,9 +8,9 @@
     </thead>
     <tbody>
     <tr *ngFor="let category of categories$ | async;">
-      <td>{{ category.name }}</td>
+      <td>{{ category[1].name }}</td>
       <td class="text-end">
-        <button class="btn btn-danger" (click)="onRemove(category.id)">Remove</button>
+        <button class="btn btn-danger" (click)="onRemove(category[1].id)">Remove</button>
       </td>
     </tr>
     </tbody>
